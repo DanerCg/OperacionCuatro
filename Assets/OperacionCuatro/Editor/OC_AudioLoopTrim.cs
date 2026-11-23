@@ -8,22 +8,30 @@ using UnityEngine;
 namespace OperacionCuatro.EditorTools
 {
     /// <summary>
-    /// Recorta el silencio digital que mus_level02 tiene al principio y al final para que el
+    /// Recorta el silencio digital que las pistas de nivel tienen al principio y al final para que el
     /// bucle de la música (AudioSource.loop = true) no deje un hueco audible de casi un segundo.
+    ///
+    /// Se aplicó primero a mus_level02 (Fase 2) y en la Fase 3 a mus_level03, que arrastraba 0,625 s
+    /// de silencio final en un bucle de 48,09 s.
     ///
     /// - El MP3 original se conserva como master fuera de Resources (Assets/OperacionCuatro/Audio/Masters).
     /// - El clip de juego pasa a ser un WAV recortado con el MISMO nombre, de modo que
-    ///   Resources.Load("Audio/mus_level02") y AudioManager.PlayMusic("mus_level02") siguen
+    ///   Resources.Load("Audio/mus_levelXX") y AudioManager.PlayMusic("mus_levelXX") siguen
     ///   funcionando sin tocar código.
     /// - El recorte usa las mismas ventanas de 50 ms y el mismo umbral relativo que la auditoría,
     ///   y añade rampas de 12 ms en los extremos para que la costura del bucle no chasquee.
     /// </summary>
     public static class OC_AudioLoopTrim
     {
-        private const string SourcePath = "Assets/OperacionCuatro/Resources/Audio/mus_level02.mp3";
         private const string MasterFolder = "Assets/OperacionCuatro/Audio/Masters";
-        private const string MasterPath = MasterFolder + "/mus_level02.mp3";
-        private const string LoopPath = "Assets/OperacionCuatro/Resources/Audio/mus_level02.wav";
+
+        private const string SourcePath02 = "Assets/OperacionCuatro/Resources/Audio/mus_level02.mp3";
+        private const string MasterPath02 = MasterFolder + "/mus_level02.mp3";
+        private const string LoopPath02 = "Assets/OperacionCuatro/Resources/Audio/mus_level02.wav";
+
+        private const string SourcePath03 = "Assets/OperacionCuatro/Resources/Audio/mus_level03.mp3";
+        private const string MasterPath03 = MasterFolder + "/mus_level03.mp3";
+        private const string LoopPath03 = "Assets/OperacionCuatro/Resources/Audio/mus_level03.wav";
 
         private const float WindowSeconds = 0.05f;   // mismas ventanas que la auditoría
         private const float ThresholdFactor = 0.05f; // umbral = 5 % del RMS medio
@@ -32,17 +40,28 @@ namespace OperacionCuatro.EditorTools
         [MenuItem("OC/Audio/Recortar silencio de bucle en mus_level02")]
         public static void Execute()
         {
-            if (File.Exists(LoopPath))
+            Trim(SourcePath02, MasterPath02, LoopPath02);
+        }
+
+        [MenuItem("OC/Audio/Recortar silencio de bucle en mus_level03")]
+        public static void ExecuteLevel03()
+        {
+            Trim(SourcePath03, MasterPath03, LoopPath03);
+        }
+
+        private static void Trim(string sourcePath, string masterPath, string loopPath)
+        {
+            if (File.Exists(loopPath))
             {
-                UnityEngine.Debug.LogWarning("[AUDIO] " + LoopPath + " ya existe: no se vuelve a recortar. "
+                UnityEngine.Debug.LogWarning("[AUDIO] " + loopPath + " ya existe: no se vuelve a recortar. "
                     + "Borra el WAV y devuelve el MP3 a Resources/Audio si necesitas repetir el proceso.");
                 return;
             }
 
-            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(SourcePath);
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(sourcePath);
             if (clip == null)
             {
-                UnityEngine.Debug.LogError("[AUDIO] no se encontró " + SourcePath);
+                UnityEngine.Debug.LogError("[AUDIO] no se encontró " + sourcePath);
                 return;
             }
 
@@ -60,14 +79,14 @@ namespace OperacionCuatro.EditorTools
 
             if (total <= 0 || clip.loadState != AudioDataLoadState.Loaded)
             {
-                UnityEngine.Debug.LogError("[AUDIO] no se pudo cargar la onda de " + SourcePath + " (estado=" + clip.loadState + ")");
+                UnityEngine.Debug.LogError("[AUDIO] no se pudo cargar la onda de " + sourcePath + " (estado=" + clip.loadState + ")");
                 return;
             }
 
             var data = new float[total * channels];
             if (!clip.GetData(data, 0))
             {
-                UnityEngine.Debug.LogError("[AUDIO] GetData falló para " + SourcePath + " (estado=" + clip.loadState + ")");
+                UnityEngine.Debug.LogError("[AUDIO] GetData falló para " + sourcePath + " (estado=" + clip.loadState + ")");
                 return;
             }
 
@@ -128,20 +147,20 @@ namespace OperacionCuatro.EditorTools
                     output[i * channels + c] = data[(startSample + i) * channels + c] * gain;
             }
 
-            WriteWav(LoopPath, output, channels, frequency);
+            WriteWav(loopPath, output, channels, frequency);
 
             if (!AssetDatabase.IsValidFolder("Assets/OperacionCuatro/Audio"))
                 AssetDatabase.CreateFolder("Assets/OperacionCuatro", "Audio");
             if (!AssetDatabase.IsValidFolder(MasterFolder))
                 AssetDatabase.CreateFolder("Assets/OperacionCuatro/Audio", "Masters");
 
-            string moveError = AssetDatabase.MoveAsset(SourcePath, MasterPath);
+            string moveError = AssetDatabase.MoveAsset(sourcePath, masterPath);
             if (!string.IsNullOrEmpty(moveError))
                 UnityEngine.Debug.LogWarning("[AUDIO] no se pudo mover el MP3 original fuera de Resources: " + moveError);
 
-            AssetDatabase.ImportAsset(LoopPath, ImportAssetOptions.ForceUpdate);
+            AssetDatabase.ImportAsset(loopPath, ImportAssetOptions.ForceUpdate);
 
-            var importer = AssetImporter.GetAtPath(LoopPath) as AudioImporter;
+            var importer = AssetImporter.GetAtPath(loopPath) as AudioImporter;
             if (importer != null)
             {
                 var settings = importer.defaultSampleSettings;
@@ -153,16 +172,16 @@ namespace OperacionCuatro.EditorTools
                 importer.SaveAndReimport();
             }
 
-            var loop = AssetDatabase.LoadAssetAtPath<AudioClip>(LoopPath);
+            var loop = AssetDatabase.LoadAssetAtPath<AudioClip>(loopPath);
             string result = loop != null
-                ? "nuevoClip=" + LoopPath + " duración=" + loop.length.ToString("0.00") + "s muestras=" + loop.samples
+                ? "nuevoClip=" + loopPath + " duración=" + loop.length.ToString("0.00") + "s muestras=" + loop.samples
                 : "nuevo clip NO cargado";
 
-            UnityEngine.Debug.Log("[AUDIO] recorte de bucle -> origen=" + SourcePath
+            UnityEngine.Debug.Log("[AUDIO] recorte de bucle -> origen=" + sourcePath
                                   + " silencioInicialRecortado=" + (startSample / (float)frequency).ToString("0.000") + "s"
                                   + " silencioFinalRecortado=" + ((total - endSample) / (float)frequency).ToString("0.000") + "s"
                                   + " rampa=" + (fade / (float)frequency).ToString("0.000") + "s"
-                                  + " master=" + MasterPath + " " + result);
+                                  + " master=" + masterPath + " " + result);
         }
 
         private static void WriteWav(string assetPath, float[] interleaved, int channels, int frequency)
