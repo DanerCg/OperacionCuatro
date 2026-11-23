@@ -30,6 +30,14 @@ namespace OperacionCuatro
         public int heavyDamage = 9;
         public float heavyBulletSpeed = 26f;
 
+        [Header("Arma láser (Fase 3)")]
+        [Tooltip("Proyectil del arma láser; si falta se usa el básico.")]
+        public Projectile laserBoltPrefab;
+        public float laserFireRate = 0.2f;
+        public int laserDamage = 26;
+        public float laserBoltSpeed = 34f;
+        public string laserSound = "sfx_laser";
+
         [Header("Referencias")]
         public Transform muzzle;
         public Animator animator;
@@ -41,8 +49,21 @@ namespace OperacionCuatro
 
         public bool HasHeavyWeapon { get { return HeavyAmmo > 0; } }
 
+        /// <summary>Municiones restantes del arma láser (0 = vuelve el arma anterior).</summary>
+        public int LaserAmmo { get; private set; }
+
+        public bool HasLaser { get { return LaserAmmo > 0; } }
+
         public event Action<int> BombsChanged;
         public event Action<int> HeavyAmmoChanged;
+        public event Action<int> LaserAmmoChanged;
+
+        /// <summary>Recoge el arma láser. Al agotar la munición vuelve el arma anterior.</summary>
+        public void ApplyLaserWeapon(int ammo)
+        {
+            LaserAmmo = Mathf.Max(0, ammo);
+            if (LaserAmmoChanged != null) LaserAmmoChanged(LaserAmmo);
+        }
 
         /// <summary>Recoge la ametralladora pesada. Al agotar la munición vuelve el arma básica.</summary>
         public void ApplyHeavyWeapon(int ammo)
@@ -84,12 +105,15 @@ namespace OperacionCuatro
             if (GameManager.Instance != null && GameManager.Instance.IsPaused) return false;
             if (Time.time < nextFireTime) return false;
 
-            nextFireTime = Time.time + (HasHeavyWeapon ? heavyFireRate : fireRate);
+            // Prioridad: láser (Fase 3) > ametralladora pesada (Fase 2) > arma básica.
+            bool laser = HasLaser && laserBoltPrefab != null;
+            bool heavy = !laser && HasHeavyWeapon;
 
-            bool heavy = HasHeavyWeapon;
-            var prefab = heavy && heavyBulletPrefab != null ? heavyBulletPrefab : bulletPrefab;
-            int damage = heavy ? heavyDamage : bulletDamage;
-            float speed = heavy ? heavyBulletSpeed : bulletSpeed;
+            nextFireTime = Time.time + (laser ? laserFireRate : heavy ? heavyFireRate : fireRate);
+
+            var prefab = laser ? laserBoltPrefab : (heavy && heavyBulletPrefab != null ? heavyBulletPrefab : bulletPrefab);
+            int damage = laser ? laserDamage : heavy ? heavyDamage : bulletDamage;
+            float speed = laser ? laserBoltSpeed : heavy ? heavyBulletSpeed : bulletSpeed;
 
             Vector3 spawnPos = MuzzlePosition(direction.x);
             var bullet = Instantiate(prefab, spawnPos, Quaternion.identity);
@@ -97,7 +121,12 @@ namespace OperacionCuatro
             bullet.speed = speed;
             bullet.Launch(direction, damage, Faction.Player, owner != null ? owner.playerIndex : 0);
 
-            if (heavy)
+            if (laser)
+            {
+                LaserAmmo--;
+                if (LaserAmmoChanged != null) LaserAmmoChanged(LaserAmmo);
+            }
+            else if (heavy)
             {
                 HeavyAmmo--;
                 if (HeavyAmmoChanged != null) HeavyAmmoChanged(HeavyAmmo);
@@ -111,7 +140,7 @@ namespace OperacionCuatro
             }
 
             if (animator != null) animator.SetTrigger(ParamShoot);
-            AudioManager.Sfx("sfx_shoot", 0.45f);
+            AudioManager.Sfx(laser && !string.IsNullOrEmpty(laserSound) ? laserSound : "sfx_shoot", 0.45f);
 
             return true;
         }
