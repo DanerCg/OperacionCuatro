@@ -81,9 +81,24 @@ namespace OperacionCuatro
             // Estado del arma especial (solo los HUD que tengan el campo asignado).
             if (weaponText != null)
             {
+                int laser = player.shooter != null ? player.shooter.LaserAmmo : 0;
                 int heavy = player.shooter != null ? player.shooter.HeavyAmmo : 0;
-                weaponText.text = heavy > 0 ? "AMETRALLADORA " + heavy : "ARMA BÁSICA";
-                weaponText.color = heavy > 0 ? new Color(1f, 0.79f, 0.25f) : new Color(1f, 1f, 1f, 0.55f);
+
+                if (laser > 0)
+                {
+                    weaponText.text = "LÁSER " + laser;
+                    weaponText.color = new Color(0.42f, 0.92f, 1f);
+                }
+                else if (heavy > 0)
+                {
+                    weaponText.text = "AMETRALLADORA " + heavy;
+                    weaponText.color = new Color(1f, 0.79f, 0.25f);
+                }
+                else
+                {
+                    weaponText.text = "ARMA BÁSICA";
+                    weaponText.color = new Color(1f, 1f, 1f, 0.55f);
+                }
             }
         }
     }

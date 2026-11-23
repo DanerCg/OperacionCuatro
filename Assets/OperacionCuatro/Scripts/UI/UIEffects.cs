@@ -26,26 +26,8 @@ namespace OperacionCuatro
         }
     }
 
-    /// <summary>Parpadeo de texto (estilo "INSERT COIN").</summary>
-    public class UIBlink : MonoBehaviour
-    {
-        public Graphic target;
-        public float speed = 2.2f;
-        public float minAlpha = 0.18f;
-
-        private void Awake()
-        {
-            if (target == null) target = GetComponent<Graphic>();
-        }
-
-        private void Update()
-        {
-            if (target == null) return;
-            var c = target.color;
-            c.a = Mathf.Lerp(minAlpha, 1f, (Mathf.Sin(Time.unscaledTime * speed) + 1f) * 0.5f);
-            target.color = c;
-        }
-    }
+    // UIBlink se movió a Scripts/UI/UIBlink.cs para que tenga MonoScript propio:
+    // el componente InsertCoin de MainMenu quedaba nulo al compartir archivo.
 
     /// <summary>Pulso de escala suave para botones destacados.</summary>
     public class UIPulse : MonoBehaviour
