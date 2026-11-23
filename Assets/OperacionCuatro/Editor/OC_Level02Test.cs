@@ -170,10 +170,27 @@ namespace OperacionCuatro.EditorTools
                 "3. Level02 está registrada en Build Settings después de Level01",
                 "Level01=" + index01 + " Level02=" + index02);
 
-            Check(GameSession.LastLevel == 2 && !GameSession.HasNextLevel
-                  && GameSession.GetLevelSceneName() == "Level02",
-                "4. No existe un nivel posterior y REINTENTAR recargaría Level02, no Level01",
-                "último=" + GameSession.LastLevel + " reintentar=" + GameSession.GetLevelSceneName());
+            // Fase 3: Level03 existe, así que la aserción original de Fase 2 (LastLevel == 2) ya no
+            // describe el proyecto. Lo que sigue siendo cierto y hay que proteger es que REINTENTAR
+            // recargue el nivel en curso (Level02) y no Level01, y que SIGUIENTE MISIÓN lleve a
+            // Level03. Se comprueba la resolución del nivel 3 con un préstamo del estado que se
+            // devuelve a su valor en el mismo fotograma, sin tocar la sesión en curso.
+            bool retryReloads02 = GameSession.CurrentLevel == 2
+                                  && GameSession.GetLevelSceneName() == SceneNames.Level02
+                                  && GameSession.GetLevelSceneName() != SceneNames.Level01;
+
+            int levelBeforeProbe = GameSession.CurrentLevel;
+            GameSession.CurrentLevel = 3;
+            bool nextIs03 = GameSession.GetLevelSceneName() == SceneNames.Level03;
+            GameSession.CurrentLevel = levelBeforeProbe;
+
+            bool nextExists = GameSession.LastLevel == 3 && GameSession.HasNextLevel;
+
+            Check(retryReloads02 && nextExists && nextIs03,
+                "4. REINTENTAR recargaría Level02 (no Level01) y SIGUIENTE MISIÓN resolvería Level03",
+                "último=" + GameSession.LastLevel + " haySiguiente=" + GameSession.HasNextLevel
+                + " reintentar=" + GameSession.GetLevelSceneName() + " siguiente="
+                + (nextIs03 ? SceneNames.Level03 : "?"));
 
             if (player == null) { Finish(); yield break; }
 
@@ -519,18 +536,47 @@ namespace OperacionCuatro.EditorTools
 
                 float platformStart = movingPlatform.transform.position.x;
                 float playerStart = player.transform.position.x;
+                float relStart = playerStart - platformStart;
 
-                yield return new WaitForSecondsRealtime(2.2f);
+                float platformDelta = 0f;
+                float playerDelta = 0f;
+                float relDrift = 0f;
+                float maxPlatformMove = 0f;
+                float elapsed = 0f;
 
-                float platformDelta = movingPlatform.transform.position.x - platformStart;
-                float playerDelta = player.transform.position.x - playerStart;
+                // La plataforma invierte el sentido al llegar a un extremo: una ventana fija de
+                // 2,2 s puede caer entera dentro de un cambio de sentido y dejar un desplazamiento
+                // neto pequeño aunque se haya movido de verdad. Se muestrea hasta observar un
+                // recorrido real de al menos 1,2 unidades, con un tope de 8 s.
+                while (elapsed < 8f)
+                {
+                    yield return new WaitForSecondsRealtime(0.25f);
+                    elapsed += 0.25f;
 
-                platformOk = Mathf.Abs(platformDelta) >= 1f && Mathf.Abs(playerDelta) >= 0.5f
+                    platformDelta = movingPlatform.transform.position.x - platformStart;
+                    playerDelta = player.transform.position.x - playerStart;
+                    relDrift = (player.transform.position.x - movingPlatform.transform.position.x) - relStart;
+                    maxPlatformMove = Mathf.Max(maxPlatformMove, Mathf.Abs(platformDelta));
+
+                    if (Mathf.Abs(platformDelta) >= 1.2f
+                        && Mathf.Abs(playerDelta) >= 0.5f
+                        && Mathf.Sign(playerDelta) == Mathf.Sign(platformDelta)
+                        && Mathf.Abs(relDrift) <= 0.6f)
+                        break;
+                }
+
+                // Además de moverse en el mismo sentido, el jugador no debe deslizarse sobre la
+                // plataforma: su separación respecto a ella tiene que mantenerse (relDrift).
+                platformOk = Mathf.Abs(platformDelta) >= 1.2f && Mathf.Abs(playerDelta) >= 0.5f
                              && Mathf.Sign(playerDelta) == Mathf.Sign(platformDelta)
+                             && Mathf.Abs(relDrift) <= 0.6f
                              && Mathf.Abs(player.transform.position.y - top) < 1.2f;
 
                 platformDetail = "plataforma=" + platformDelta.ToString("0.00")
-                                 + " jugador=" + playerDelta.ToString("0.00");
+                                 + " jugador=" + playerDelta.ToString("0.00")
+                                 + " recorridoMax=" + maxPlatformMove.ToString("0.00")
+                                 + " deriva=" + relDrift.ToString("0.00")
+                                 + " ventana=" + elapsed.ToString("0.00") + "s";
             }
 
             Check(platformOk, "19. Plataforma móvil: se desplaza y arrastra al jugador que lleva encima", platformDetail);
