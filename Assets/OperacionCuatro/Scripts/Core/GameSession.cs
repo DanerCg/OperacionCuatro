@@ -25,8 +25,8 @@ namespace OperacionCuatro
         /// <summary>Primer nivel jugable de la campaña.</summary>
         public const int FirstLevel = 1;
 
-        /// <summary>Último nivel implementado hasta ahora (Fase 2: Level01 y Level02).</summary>
-        public const int LastLevel = 2;
+        /// <summary>Último nivel implementado hasta ahora (Fase 3: Level01, Level02 y Level03).</summary>
+        public const int LastLevel = 3;
 
         /// <summary>Nivel en curso. Se conserva al REINTENTAR y avanza con SIGUIENTE MISIÓN.</summary>
         public static int CurrentLevel = FirstLevel;
@@ -109,11 +109,13 @@ namespace OperacionCuatro
         /// <summary>Escena que corresponde al nivel en curso. Nunca devuelve un nivel incorrecto.</summary>
         public static string GetLevelSceneName()
         {
+            if (CurrentLevel >= 3) return SceneNames.Level03;
             return CurrentLevel == 2 ? SceneNames.Level02 : SceneNames.Level01;
         }
 
         public static string GetLevelDisplayName()
         {
+            if (CurrentLevel >= 3) return "LABORATORIO SUBTERRÁNEO";
             return CurrentLevel == 2 ? "COMPLEJO DE GUERRA" : "PUERTO EN RUINAS";
         }
 

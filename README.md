@@ -4,7 +4,8 @@ Juego de acción y plataformas 2D para 1 o 2 jugadores, hecho en **Unity 6.3 LTS
 
 Se elige entre 4 personajes (**Danner, Cesar, Sebastián e Inés**), se avanza por las misiones disparando,
 lanzando granadas y recogiendo armas, y se cumple el objetivo de cada nivel (en el Nivel 2, destruir el
-generador central). Por ahora están implementados los niveles **Level01** y **Level02**; se irán agregando más.
+generador central). Por ahora están implementados los niveles **Level01**, **Level02** y **Level03** (laboratorio subterráneo, con puertas de seguridad,
+trampas láser y una secuencia final de escape); se irán agregando más.
 
 ## Equipo
 
@@ -13,7 +14,7 @@ generador central). Por ahora están implementados los niveles **Level01** y **L
 | Daner | Base del proyecto, núcleo (Core), configuración y herramientas de editor |
 | Cesar | Jugador y combate (personajes, animaciones, armas, efectos) |
 | Castillo | Enemigos (scripts, sprites, animaciones y prefabs) |
-| Condor | Mundo y niveles (scripts de nivel, fondos, props, escenas Level01 y Level02) |
+| Condor | Mundo y niveles (scripts de nivel, fondos, props, escenas Level01, Level02 y Level03) |
 | Inés | Interfaz (UI) y audio, escenas de menú, selección de personaje y resultados |
 
 ## Cómo abrir el proyecto
@@ -35,8 +36,8 @@ generador central). Por ahora están implementados los niveles **Level01** y **L
 Assets/OperacionCuatro/
 ├── Scripts/    Core · Player · Combat · Enemies · Level · UI
 ├── Editor/     Builders y herramientas de prueba del editor
-├── Scenes/     MainMenu · CharacterSelection · Level01 · Level02 · Results
-├── Prefabs/    combate (balas, bombas, efectos) y objetos del nivel 2
+├── Scenes/     MainMenu · CharacterSelection · Level01 · Level02 · Level03 · Results
+├── Prefabs/    combate (balas, bombas, efectos) y objetos de los niveles 2 y 3
 ├── Sprites/    personajes, enemigos, efectos, props y mundo
 ├── Animations/ animaciones y controladores de personajes y enemigos
 ├── Audio/      audios maestros de la música
@@ -57,7 +58,20 @@ con su propia rama y un Pull Request revisado por otro compañero.
 | 4. Mundo y niveles 1 y 2 | `feature/parte-4-mundo-niveles` | Condor |
 | 5. UI y audio | `feature/parte-5-ui-audio` | Inés |
 
-Los niveles que faltan se agregarán en partes nuevas, con el mismo flujo de ramas y Pull Requests.
+### Fase 2 (etiqueta `v2.0`): Nivel 3
+
+Se agregó el nivel 3 con el mismo flujo: cada integrante subió los cambios de su área en una rama
+`feature/fase-2-...` con un solo commit y un Pull Request a `develop`.
+
+| Rama | Responsable | Contenido |
+|---|---|---|
+| `feature/fase-2-core` | Daner | Core, Build Settings, herramientas de editor y README |
+| `feature/fase-2-jugador` | Cesar | Arma láser y ajustes del jugador |
+| `feature/fase-2-enemigos` | Castillo | Enemigos Grenadier, LaserDrone y Sentinel |
+| `feature/fase-2-nivel3` | Condor | Escena Level03, scripts de nivel, props y fondos |
+| `feature/fase-2-ui-audio` | Inés | UI de escape y energía, música y sonidos |
+
+Los niveles que faltan se agregarán con el mismo flujo de ramas y Pull Requests.
 
 Ver `CONTRIBUTING.md` para las reglas de trabajo.
 

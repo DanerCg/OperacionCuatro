@@ -9,6 +9,7 @@ namespace OperacionCuatro
         public const string CharacterSelection = "CharacterSelection";
         public const string Level01 = "Level01";
         public const string Level02 = "Level02";
+        public const string Level03 = "Level03";
         public const string Results = "Results";
     }
 

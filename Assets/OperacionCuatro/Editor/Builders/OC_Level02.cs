@@ -261,9 +261,11 @@ namespace OCBuilders
             AddSteamVent(root, "SteamVent_104", 104f, 3.2f);
             AddSteamVent(root, "SteamVent_160", 160f, 1.3f);
 
-            // ---- Plataforma móvil de producción: x 74 -> 86 a y 2.2 ----
+            // ---- Plataforma móvil de producción: x 74 -> 86 a y 2.4 ----
+            // La cara inferior queda en 2.125: el jugador de pie sobre Conveyor_3 (cima 0.28)
+            // tiene la cabeza en 2.00, así que ya no hay solape que lo empuje de lado.
             var mp = NewTiledBlock("MovingPlatform_1", root, "World/tile_platform_metal.png",
-                74f, 2.2f, 3.4f, 0.55f, "Environment", 2, true);
+                74f, 2.4f, 3.4f, 0.55f, "Environment", 2, true);
             var move = mp.AddComponent<MovingPlatform>();
             move.localA = Vector2.zero;
             move.localB = new Vector2(12f, 0f);

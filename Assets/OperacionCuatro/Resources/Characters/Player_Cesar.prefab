@@ -287,6 +287,11 @@ MonoBehaviour:
   crouchSpeed: 2.6
   jumpVelocity: 12.4
   jumpCutMultiplier: 0.45
+  groundProbeMargin: 0.06
+  groundProbeBelowFeet: 0.05
+  groundProbeAboveFeet: 0.07
+  groundSurfaceTolerance: 0.12
+  groundMaxVerticalSpeed: 6
   visual: {fileID: 1858251385252943930}
   spriteRenderer: {fileID: 4890327309317788631}
   animator: {fileID: 3437289279663672554}
@@ -322,5 +327,14 @@ MonoBehaviour:
   hitMask:
     serializedVersion: 2
     m_Bits: 1280
+  heavyBulletPrefab: {fileID: 0}
+  heavyFireRate: 0.07
+  heavyDamage: 9
+  heavyBulletSpeed: 26
+  laserBoltPrefab: {fileID: 5436541565425284382, guid: 693069922d3517541bfbe780df9cc881, type: 3}
+  laserFireRate: 0.2
+  laserDamage: 26
+  laserBoltSpeed: 34
+  laserSound: sfx_laser
   muzzle: {fileID: 8160985579458763057}
   animator: {fileID: 3437289279663672554}

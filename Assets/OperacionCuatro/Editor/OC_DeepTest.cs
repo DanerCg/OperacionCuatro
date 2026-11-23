@@ -348,16 +348,24 @@ namespace OperacionCuatro.EditorTools
             if (gunner != null)
             {
                 ClearProjectiles();
-                p1.transform.position = new Vector3(gunner.transform.position.x + 2.2f, gunner.transform.position.y + 0.2f, 0f);
+                // `ShooterEnemy` sólo dispara cuando la distancia HORIZONTAL al jugador es menor
+                // que minRange (3,5): si es mayor se acerca y no dispara. A 2,2 el jugador quedaba
+                // dentro del alcance del empuje por contacto del propio gunner (contactDamage 12),
+                // que lo desplazaba más allá de 3,5 y el enemigo pasaba a acercarse en lugar de
+                // disparar; el resultado dependía del lado y del ruido de la simulación. A 3,2 el
+                // enemigo sigue en la rama de disparo y los colliders ya no se tocan.
+                p1.transform.position = new Vector3(gunner.transform.position.x + 3.2f, gunner.transform.position.y + 0.2f, 0f);
                 var rb = p1.GetComponent<Rigidbody2D>();
                 if (rb != null) rb.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
                 p1.ClearInvulnerability();
 
                 yield return new WaitForSecondsRealtime(0.4f);
 
                 yield return SampleMaxProjectiles(3.5f, Faction.Enemy);
                 Check(sampleMax > 0, "ShooterEnemy detecta al jugador y dispara",
-                    "proyectiles=" + sampleMax + " (máximo por frame en 3,50s)");
+                    "proyectiles=" + sampleMax + " (máximo por frame en 3,50s, distancia="
+                    + Mathf.Abs(p1.transform.position.x - gunner.transform.position.x).ToString("0.00") + ")");
 
                 // --- El proyectil enemigo produce daño ---
                 yield return new WaitForSecondsRealtime(0.2f);
@@ -406,15 +414,19 @@ namespace OperacionCuatro.EditorTools
 
                 // --- Disparo hacia la izquierda: el cañón debe salir por el lado del jugador ---
                 ClearProjectiles();
-                p1.transform.position = new Vector3(gunner.transform.position.x - 2.2f, gunner.transform.position.y + 0.2f, 0f);
+                // Misma distancia que en el lado derecho (ver comentario anterior): 3,2 unidades
+                // quedan dentro de minRange (3,5) pero fuera del alcance del empuje por contacto.
+                p1.transform.position = new Vector3(gunner.transform.position.x - 3.2f, gunner.transform.position.y + 0.2f, 0f);
                 var rbLeft = p1.GetComponent<Rigidbody2D>();
                 if (rbLeft != null) rbLeft.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
                 p1.ClearInvulnerability();
                 yield return new WaitForSecondsRealtime(0.4f);
 
                 yield return SampleMaxProjectiles(3f, Faction.Enemy);
                 Check(sampleMax > 0, "ShooterEnemy dispara también hacia la izquierda",
-                    "proyectiles=" + sampleMax);
+                    "proyectiles=" + sampleMax + " (distancia="
+                    + Mathf.Abs(p1.transform.position.x - gunner.transform.position.x).ToString("0.00") + ")");
                 ClearProjectiles();
             }
 
