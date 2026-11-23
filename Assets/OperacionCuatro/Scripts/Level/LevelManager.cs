@@ -45,10 +45,14 @@ namespace OperacionCuatro
                 GameManager.Instance.Audio.PlayMusic(MusicForCurrentLevel, 0.45f);
         }
 
-        /// <summary>Música del nivel en curso (Level02 tiene pista propia).</summary>
+        /// <summary>Música del nivel en curso (Level02 y Level03 tienen pista propia).</summary>
         private static string MusicForCurrentLevel
         {
-            get { return GameSession.CurrentLevel >= 2 ? "mus_level02" : "mus_level"; }
+            get
+            {
+                if (GameSession.CurrentLevel >= 3) return "mus_level03";
+                return GameSession.CurrentLevel == 2 ? "mus_level02" : "mus_level";
+            }
         }
 
         public void SpawnPlayers()
@@ -154,6 +158,26 @@ namespace OperacionCuatro
             GameSession.MissionComplete = false;
 
             if (hud != null) hud.ShowGameOver();
+            if (GameManager.Instance != null) GameManager.Instance.SetPaused(true);
+        }
+
+        /// <summary>
+        /// Cierra la partida en Game Over sin pasar por la cuenta de vidas. Lo usa la secuencia
+        /// de escape de Level03 cuando se agota el tiempo de evacuación.
+        /// </summary>
+        public void ForceGameOver()
+        {
+            if (MissionComplete || GameOver) return;
+
+            GameOver = true;
+            GameSession.MissionComplete = false;
+
+            if (hud != null)
+            {
+                hud.ShowMessage("EVACUACIÓN FALLIDA");
+                hud.ShowGameOver();
+            }
+
             if (GameManager.Instance != null) GameManager.Instance.SetPaused(true);
         }
 

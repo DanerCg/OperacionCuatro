@@ -58,7 +58,10 @@ namespace OperacionCuatro
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (!IsActive) return;
+            // Unity entrega los callbacks de física incluso a un componente desactivado: sin esta
+            // guarda, un SteamVent con .enabled = false seguía hiriendo (auditoría de Fase 3:
+            // 4 impactos en 2 s con el componente desactivado). Desactivar el peligro debe bastar.
+            if (!isActiveAndEnabled || !IsActive) return;
 
             var health = other.GetComponentInParent<Health>();
             if (health == null || health.faction != Faction.Player || !health.IsAlive) return;

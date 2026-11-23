@@ -60,7 +60,9 @@ namespace OperacionCuatro
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (!IsCharged) return;
+            // Misma guarda que SteamVent: un componente desactivado sigue recibiendo los callbacks
+            // de física, así que la zona debe comprobar su propio estado antes de dañar.
+            if (!isActiveAndEnabled || !IsCharged) return;
 
             var health = other.GetComponentInParent<Health>();
             if (health == null || health.faction != Faction.Player || !health.IsAlive) return;
